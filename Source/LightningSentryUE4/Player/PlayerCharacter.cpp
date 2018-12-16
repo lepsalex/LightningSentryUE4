@@ -20,7 +20,7 @@ APlayerCharacter::APlayerCharacter() {
     BaseTurnRate = 45.f;
     BaseLookUpRate = 45.f;
 
-    // Don't rotate when the controller rotates. Let that just affect the camera.
+    // Don't rotate when the controller rotates.
     bUseControllerRotationPitch = false;
     bUseControllerRotationYaw = false;
     bUseControllerRotationRoll = false;
@@ -34,8 +34,7 @@ APlayerCharacter::APlayerCharacter() {
     // Create a camera boom (pulls in towards the player if there is a collision)
     CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
     CameraBoom->SetupAttachment(RootComponent);
-    CameraBoom->TargetArmLength = BaseCameraDistance; // The camera follows at this distance behind the character (same as camera height)
-    CameraBoom->SetRelativeRotation(FRotator(0.0f, 53.1301024f, 0.0f)); // Isometric camera angle
+    CameraBoom->TargetArmLength = 0;
 
     // Do not rotate the arm based on the controller
     CameraBoom->bUsePawnControlRotation = false;
@@ -47,8 +46,8 @@ APlayerCharacter::APlayerCharacter() {
     FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
     FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
     FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
-    FollowCamera->SetRelativeLocation(FVector(0.0f, 0.0f, BaseCameraDistance));
-    FollowCamera->SetRelativeRotation(FRotator(-45.0f, 0.0f, 0.0f));
+    FollowCamera->SetRelativeLocation(FVector(-BaseCameraDistance, -BaseCameraDistance, BaseCameraDistance));
+    FollowCamera->SetRelativeRotation(FRotator(-35.264f, 45.0f, 0.0f)); // Isometric camera angle
 
     // Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character)
     // are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)

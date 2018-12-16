@@ -57,10 +57,7 @@ class APlayerCharacter : public ACharacter {
 
   private:
 
-    /** Used as boom length and camera vertical offset (multiplied by zoom) **/
-    float BaseCameraDistance = 1140;
-
-    /** Not currently used but would control camera zoom **/
-    float CameraZoom = 1;
+    /** Used as boom length and camera vertical offset **/
+    float BaseCameraDistance = 900;
 };
 
