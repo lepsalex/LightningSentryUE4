@@ -21,6 +21,10 @@ class APlayerCharacter : public ACharacter {
   public:
     APlayerCharacter();
 
+    /** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement)
+    float BaseTurnRate = 115;
+
   protected:
 
     float CameraRelativeYaw(float Value) const;
@@ -29,7 +33,7 @@ class APlayerCharacter : public ACharacter {
     void MoveForward(float Value);
 
     /** Called for side to side input */
-    void MoveRight(float Value);
+    void TurnRight(float Value);
 
     /** Handler for when a touch input begins. */
     void TouchStarted(ETouchIndex::Type FingerIndex, FVector Location);
@@ -50,7 +54,6 @@ class APlayerCharacter : public ACharacter {
     FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
   private:
-
     float BaseCameraDistance = 600;
 
     float CameraAngle = 53.1301024;

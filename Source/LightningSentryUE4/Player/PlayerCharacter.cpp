@@ -16,9 +16,9 @@ APlayerCharacter::APlayerCharacter() {
     // Set size for collision capsule
     GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
-    // Don't rotate when the controller rotates.
+    // Rotate only Yaw when the controller rotates.
     bUseControllerRotationPitch = false;
-    bUseControllerRotationYaw = false;
+    bUseControllerRotationYaw = true;
     bUseControllerRotationRoll = false;
 
     // Configure character movement
@@ -59,7 +59,7 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
     PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
     PlayerInputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
-    PlayerInputComponent->BindAxis("MoveRight", this, &APlayerCharacter::MoveRight);
+    PlayerInputComponent->BindAxis("TurnRight", this, &APlayerCharacter::TurnRight);
 
     // handle touch devices
     PlayerInputComponent->BindTouch(IE_Pressed, this, &APlayerCharacter::TouchStarted);
@@ -83,7 +83,7 @@ void APlayerCharacter::MoveForward(float Value) {
 
         // find out which way is forward
         const FRotator Rotation = Controller->GetControlRotation();
-        const FRotator YawRotation(0, CameraRelativeYaw(Rotation.Yaw), 0);
+        const FRotator YawRotation(0, Rotation.Yaw, 0);
 
         // get forward vector
         const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
@@ -91,16 +91,7 @@ void APlayerCharacter::MoveForward(float Value) {
     }
 }
 
-void APlayerCharacter::MoveRight(float Value) {
-    if ( (Controller != NULL) && (Value != 0.0f) ) {
-
-        // find out which way is right
-        const FRotator Rotation = Controller->GetControlRotation();
-        const FRotator YawRotation(0, CameraRelativeYaw(Rotation.Yaw), 0);
-
-        // get right vector
-        const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-        // add movement in that direction
-        AddMovementInput(Direction, Value);
-    }
+void APlayerCharacter::TurnRight(float Rate) {
+    // TODO - Analog stick will probably need to be camera angle relative (test this out)
+    AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
 }
