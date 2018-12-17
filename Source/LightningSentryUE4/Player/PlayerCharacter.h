@@ -21,15 +21,9 @@ class APlayerCharacter : public ACharacter {
   public:
     APlayerCharacter();
 
-    /** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
-    float BaseTurnRate;
-
-    /** Base look up/down rate, in deg/sec. Other scaling may affect final rate. */
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
-    float BaseLookUpRate;
-
   protected:
+
+    float CameraRelativeYaw(float Value) const;
 
     /** Called for forwards/backward input */
     void MoveForward(float Value);
@@ -57,7 +51,8 @@ class APlayerCharacter : public ACharacter {
 
   private:
 
-    /** Used as boom length and camera vertical offset **/
-    float BaseCameraDistance = 900;
+    float BaseCameraDistance = 600;
+
+    float CameraAngle = 53.1301024;
 };
 

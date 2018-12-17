@@ -16,10 +16,6 @@ APlayerCharacter::APlayerCharacter() {
     // Set size for collision capsule
     GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
-    // set our turn rates for input
-    BaseTurnRate = 45.f;
-    BaseLookUpRate = 45.f;
-
     // Don't rotate when the controller rotates.
     bUseControllerRotationPitch = false;
     bUseControllerRotationYaw = false;
@@ -46,8 +42,8 @@ APlayerCharacter::APlayerCharacter() {
     FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
     FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
     FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
-    FollowCamera->SetRelativeLocation(FVector(-BaseCameraDistance, -BaseCameraDistance, BaseCameraDistance));
-    FollowCamera->SetRelativeRotation(FRotator(-35.264f, 45.0f, 0.0f)); // Isometric camera angle
+    FollowCamera->SetRelativeLocation(FVector(-BaseCameraDistance, -BaseCameraDistance, BaseCameraDistance * 2));
+    FollowCamera->SetRelativeRotation(FRotator(-CameraAngle, CameraAngle, 0.0f)); // Isometric camera angle
 
     // Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character)
     // are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
@@ -78,13 +74,16 @@ void APlayerCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector Locat
     StopJumping();
 }
 
+float APlayerCharacter::CameraRelativeYaw(float Value) const {
+    return Value + FollowCamera->RelativeRotation.Yaw;
+}
+
 void APlayerCharacter::MoveForward(float Value) {
     if ((Controller != NULL) && (Value != 0.0f)) {
-        // TODO - Get offset of camera and calculate world forward when using analog input
 
         // find out which way is forward
         const FRotator Rotation = Controller->GetControlRotation();
-        const FRotator YawRotation(0, Rotation.Yaw, 0);
+        const FRotator YawRotation(0, CameraRelativeYaw(Rotation.Yaw), 0);
 
         // get forward vector
         const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
@@ -94,11 +93,10 @@ void APlayerCharacter::MoveForward(float Value) {
 
 void APlayerCharacter::MoveRight(float Value) {
     if ( (Controller != NULL) && (Value != 0.0f) ) {
-        // TODO - Get offset of camera and calculate world forward when using analog input
 
         // find out which way is right
         const FRotator Rotation = Controller->GetControlRotation();
-        const FRotator YawRotation(0, Rotation.Yaw, 0);
+        const FRotator YawRotation(0, CameraRelativeYaw(Rotation.Yaw), 0);
 
         // get right vector
         const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
