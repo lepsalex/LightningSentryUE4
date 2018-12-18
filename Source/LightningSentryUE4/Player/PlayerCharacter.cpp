@@ -81,6 +81,8 @@ float APlayerCharacter::CameraRelativeYaw(float Value) const {
 void APlayerCharacter::MoveForward(float Value) {
     if ((Controller != NULL) && (Value != 0.0f)) {
 
+        // TODO - Deal with moving backwards - currently it's pretty awkward
+
         // find out which way is forward
         const FRotator Rotation = Controller->GetControlRotation();
         const FRotator YawRotation(0, Rotation.Yaw, 0);
