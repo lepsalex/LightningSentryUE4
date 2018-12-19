@@ -18,7 +18,7 @@ APlayerCharacter::APlayerCharacter() {
 
     // Rotate only Yaw when the controller rotates.
     bUseControllerRotationPitch = false;
-    bUseControllerRotationYaw = true;
+    bUseControllerRotationYaw = false;
     bUseControllerRotationRoll = false;
 
     // Configure character movement
@@ -27,23 +27,20 @@ APlayerCharacter::APlayerCharacter() {
     GetCharacterMovement()->JumpZVelocity = 600.f;
     GetCharacterMovement()->AirControl = 0.2f;
 
-    // Create a camera boom (pulls in towards the player if there is a collision)
+    // Create a camera boom...
     CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
     CameraBoom->SetupAttachment(RootComponent);
-    CameraBoom->TargetArmLength = 0;
+    CameraBoom->bAbsoluteRotation = true; // Don't want arm to rotate when character does
+    CameraBoom->TargetArmLength = BaseCameraDistance;
+    CameraBoom->RelativeRotation = FRotator(0.f, CameraAngle, 0.f);
+    CameraBoom->bDoCollisionTest = false; // Don't want to pull camera in when it collides with level
 
-    // Do not rotate the arm based on the controller
-    CameraBoom->bUsePawnControlRotation = false;
-    CameraBoom->bInheritPitch = false;
-    CameraBoom->bInheritRoll = false;
-    CameraBoom->bInheritYaw = false;
-
-    // Create a follow camera
-    FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
-    FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
-    FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
-    FollowCamera->SetRelativeLocation(FVector(-BaseCameraDistance, -BaseCameraDistance, BaseCameraDistance * 2));
-    FollowCamera->SetRelativeRotation(FRotator(-CameraAngle, CameraAngle, 0.0f)); // Isometric camera angle
+    // Create a camera...
+    TopDownCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("TopDownCamera"));
+    TopDownCameraComponent->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
+    TopDownCameraComponent->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+    TopDownCameraComponent->SetRelativeLocation(FVector(0.f, 0.f, CameraZOffset));
+    TopDownCameraComponent->SetRelativeRotation(FRotator(-CameraAngle, 0.f, 0.f));
 
     // Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character)
     // are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
@@ -59,7 +56,8 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
     PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
     PlayerInputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
-    PlayerInputComponent->BindAxis("TurnRight", this, &APlayerCharacter::TurnRight);
+    PlayerInputComponent->BindAxis("MoveRight", this, &APlayerCharacter::MoveRight);
+    PlayerInputComponent->BindAxis("Turn", this, &APlayerCharacter::TurnAtRate);
 
     // handle touch devices
     PlayerInputComponent->BindTouch(IE_Pressed, this, &APlayerCharacter::TouchStarted);
@@ -74,18 +72,12 @@ void APlayerCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector Locat
     StopJumping();
 }
 
-float APlayerCharacter::CameraRelativeYaw(float Value) const {
-    return Value + FollowCamera->RelativeRotation.Yaw;
-}
-
 void APlayerCharacter::MoveForward(float Value) {
     if ((Controller != NULL) && (Value != 0.0f)) {
 
-        // TODO - Deal with moving backwards - currently it's pretty awkward
-
         // find out which way is forward
         const FRotator Rotation = Controller->GetControlRotation();
-        const FRotator YawRotation(0, Rotation.Yaw, 0);
+        const FRotator YawRotation(0, CameraRelativeYaw(Rotation.Yaw), 0);
 
         // get forward vector
         const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
@@ -93,7 +85,26 @@ void APlayerCharacter::MoveForward(float Value) {
     }
 }
 
-void APlayerCharacter::TurnRight(float Rate) {
-    // TODO - Analog stick will probably need to be camera angle relative (test this out)
+void APlayerCharacter::MoveRight(float Value) {
+    if ((Controller != NULL) && (Value != 0.0f)) {
+
+        // find out which way is right
+        const FRotator Rotation = Controller->GetControlRotation();
+        const FRotator YawRotation(0, CameraRelativeYaw(Rotation.Yaw), 0);
+
+        // get right vector
+        const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+        // add movement in that direction
+        AddMovementInput(Direction, Value);
+    }
+}
+
+void APlayerCharacter::TurnAtRate(float Rate) {
+    // calculate delta for this frame from the rate information
     AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+}
+
+float APlayerCharacter::CameraRelativeYaw(float Value) const {
+    return Value - 45; // simple offset to make the controls feel right
 }
