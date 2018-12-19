@@ -24,8 +24,8 @@ APlayerCharacter::APlayerCharacter() {
     // Configure character movement
     GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...
     GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f); // ...at this rotation rate
-    GetCharacterMovement()->JumpZVelocity = 600.f;
-    GetCharacterMovement()->AirControl = 0.2f;
+    GetCharacterMovement()->bConstrainToPlane = true;
+    GetCharacterMovement()->bSnapToPlaneAtStart = true;
 
     // Create a camera boom...
     CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -52,24 +52,10 @@ APlayerCharacter::APlayerCharacter() {
 void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) {
     // Set up gameplay key bindings
     check(PlayerInputComponent);
-    PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
-    PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
     PlayerInputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
     PlayerInputComponent->BindAxis("MoveRight", this, &APlayerCharacter::MoveRight);
     PlayerInputComponent->BindAxis("Turn", this, &APlayerCharacter::TurnAtRate);
-
-    // handle touch devices
-    PlayerInputComponent->BindTouch(IE_Pressed, this, &APlayerCharacter::TouchStarted);
-    PlayerInputComponent->BindTouch(IE_Released, this, &APlayerCharacter::TouchStopped);
-}
-
-void APlayerCharacter::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location) {
-    Jump();
-}
-
-void APlayerCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector Location) {
-    StopJumping();
 }
 
 void APlayerCharacter::MoveForward(float Value) {
